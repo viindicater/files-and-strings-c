@@ -158,13 +158,13 @@ int save_file(char *name, char **lines, size_t count){
 	size_t len = strlen(name); char temp_name[len + 6]; // 5 for ".temp" + 1 for "\0"
 	memcpy(temp_name, name, len); memcpy(temp_name + len, ".temp", 6); // Copies ".temp" and the \0
 	int error = 0; FILE *f = fopen(temp_name, "w");
-	if(!f){ fprintf(stderr, "Failed to open '%s' temp file: %s.\n", name, strerror(errno)); error = 1; }
+	if(!f){ fprintf(stderr, "Error: failed to open file '%s' temp file: %s.\n", name, strerror(errno)); error = 1; }
 	else{
-		for(int i = 0; i < count; i++){ if(fprintf(f, "%s\n", lines[i]) < 0){ fprintf(stderr, "Failed to write '%s' temp file: %s.\n", name, strerror(errno)); error = 1; break; } }
-		if(fclose(f) != 0){ fprintf(stderr, "Failed to close '%s' temp file: %s.\n", name, strerror(errno)); error = 1; }
+		for(int i = 0; i < count; i++){ if(fprintf(f, "%s\n", lines[i]) < 0){ fprintf(stderr, "Error: failed to write file '%s' temp file: %s.\n", name, strerror(errno)); error = 1; break; } }
+		if(fclose(f) != 0){ fprintf(stderr, "Error: failed to close file '%s' temp file: %s.\n", name, strerror(errno)); error = 1; }
 	}if(error == 0){
 		remove(name); // windows requires it to rename
-		if(rename(temp_name, name) != 0){ fprintf(stderr, "Failed to replace '%s' file with updated temp file: %s.\n", name, strerror(errno)); error = 1;}
+		if(rename(temp_name, name) != 0){ fprintf(stderr, "Error: failed to replace file '%s' file with updated temp file: %s.\n", name, strerror(errno)); error = 1;}
 	}else{ remove(temp_name); } // remove temp (cleanup) if failed to write
 	return error;
 }
@@ -184,9 +184,9 @@ int read_file(char *name, char ***lines, size_t *count){
 				(*lines)[(*count)++] = buffer;
 			}
 		}
-		if(ferror(f)){ fprintf(stderr, "Failed to read '%s': %s.\n", name, strerror(errno)); fclose(f); error = 1; } // readline error (must still close file), set f = NULL so can check if NULL to detect error
-		else if(fclose(f) != 0){ fprintf(stderr, "Failed to close '%s': %s.\n", name, strerror(errno)); error = 1; }
-	}else if(errno != ENOENT){ /*ignore print for file not found*/ fprintf(stderr, "Failed to open '%s': %s.\n", name, strerror(errno)); fprintf(stderr, "WARNING: If file is valid, to avoid corrupting it, should avoid taking any actions that writes to it until the above is resolved.\n"); }
+		if(ferror(f)){ fprintf(stderr, "Error: failed to read file '%s': %s.\n", name, strerror(errno)); fclose(f); error = 1; } // readline error (must still close file), set f = NULL so can check if NULL to detect error
+		else if(fclose(f) != 0){ fprintf(stderr, "Error: failed to close file '%s': %s.\n", name, strerror(errno)); error = 1; }
+	}else if(errno != ENOENT){ /*ignore print for file not found*/ fprintf(stderr, "Error: failed to open file '%s': %s.\n", name, strerror(errno)); fprintf(stderr, "WARNING: If file is valid, to avoid corrupting it, should avoid taking any actions that writes to it until the above is resolved.\n"); }
 	if(error == 1 && *lines){ for(size_t i = 0; i < *count; i++){ free((*lines)[i]); } free(*lines); *count = 0; *lines = NULL; };
 	return error;
 }
@@ -299,7 +299,7 @@ int main(int argc, char *argv[]){
 	size_t j = 0; // last valid line (used to drop malformed lines, to avoid needing to "free(entries[i]); for(size_t j = i; j < count - 1; j++){ entries[j] = entries[j + 1]; } count--; i--;") 
 	if(read_file(fileName, &entries, &count) == 0 && entries){
 		for(size_t i = 0; i < count; i++){
-			int n = 0; char **fields = parse_fields(entries[i], &n); if(!fields){ puts("MEMORY ERROR: failed to read file (2)."); goto free_entries; } // WARNING: parse_fields (like strtok) changes \t's to \0's in the original string, which is why fix_line_after_fields_parse is called below, to reverse the change.
+			int n = 0; char **fields = parse_fields(entries[i], &n); if(!fields){ goto free_entries; } // WARNING: parse_fields (like strtok) changes \t's to \0's in the original string, which is why fix_line_after_fields_parse is called below, to reverse the change.
 			
 			if(n != 3 || fields[0][0] == '\0' || fields[1][0] == '\0'){ // Custom validation logic, in this case, check if line has exactly 3 fields and first 2 are not empty, i.e. if malformed
 				free(entries[i]); printf("Warning: malformed line #%d (# fields = %d).\n", i + 1, n); // drop malformed lines, which effectively deletes them when file is saved
@@ -312,7 +312,7 @@ int main(int argc, char *argv[]){
 			if(!tmp){ printf("MEMORY ERROR: failed to trim buffer."); goto free_entries; }
 			entries = tmp;
 		}else{ free(entries); entries = NULL; } 
-	}else{ puts("Error: failed to read file."); goto free_entries; }
+	}else{ goto free_entries; } // failed to read file
 	
 	free_entries: // cleanup
 	if(entries){ for(size_t i = 0; i < count; i++){ free(entries[i]); } free(entries); }
