@@ -208,8 +208,7 @@ char **parse_fields(char *line, int *count){ // WARNING: replaces \t's with \0's
 			fields = tmp;
 		}
 		fields[(*count)++] = cur;
-		tab = strchr(cur, '\t');
-		if(tab){ *tab = '\0'; cur = tab + 1; }
+		if(tab = strchr(cur, '\t')){ *tab = '\0'; cur = tab + 1; }
 	}while(tab);
 	if(*count > 0){
 		char **tmp = realloc(fields, *count * sizeof(char*));
