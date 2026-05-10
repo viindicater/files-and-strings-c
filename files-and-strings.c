@@ -207,10 +207,9 @@ char **parse_fields(char *line, int *count){ // WARNING: replaces \t's with \0's
 			if(!tmp){ puts("MEMORY ERROR: failed to parse fields (2)."); free(fields); return NULL; }
 			fields = tmp;
 		}
-		fields[*count] = cur; (*count)++;
+		fields[(*count)++] = cur;
 		tab = strchr(cur, '\t');
-		if(tab){ *tab = '\0'; cur = tab + 1; }
-		else break;
+		if(tab){ *tab = '\0'; cur = tab + 1; }else{ break; }
 	}
 	if(*count > 0){
 		char **tmp = realloc(fields, *count * sizeof(char*));
