@@ -158,13 +158,13 @@ int save_file(char *name, char **lines, size_t count){
 	size_t len = strlen(name); char temp_name[len + 6]; // 5 for ".temp" + 1 for "\0"
 	memcpy(temp_name, name, len); memcpy(temp_name + len, ".temp", 6); // Copies ".temp" and the \0
 	int error = 0; FILE *f = fopen(temp_name, "w");
-	if(!f){ fprintf(stderr, "Error: failed to open file '%s' temp file: %s.\n", name, strerror(errno)); error = 1; }
+	if(!f){ fprintf(stderr, "Error: failed to open '%s' temp file: %s.\n", name, strerror(errno)); error = 1; }
 	else{
-		for(int i = 0; i < count; i++){ if(fprintf(f, "%s\n", lines[i]) < 0){ fprintf(stderr, "Error: failed to write file '%s' temp file: %s.\n", name, strerror(errno)); error = 1; break; } }
-		if(fclose(f) != 0){ fprintf(stderr, "Error: failed to close file '%s' temp file: %s.\n", name, strerror(errno)); error = 1; }
+		for(int i = 0; i < count; i++){ if(fprintf(f, "%s\n", lines[i]) < 0){ fprintf(stderr, "Error: failed to write '%s' temp file: %s.\n", name, strerror(errno)); error = 1; break; } }
+		if(fclose(f) != 0){ fprintf(stderr, "Error: failed to close '%s' temp file: %s.\n", name, strerror(errno)); error = 1; }
 	}if(error == 0){
 		remove(name); // windows requires it to rename
-		if(rename(temp_name, name) != 0){ fprintf(stderr, "Error: failed to replace file '%s' file with updated temp file: %s.\n", name, strerror(errno)); error = 1;}
+		if(rename(temp_name, name) != 0){ fprintf(stderr, "Error: failed to replace file '%s' with updated temp file: %s.\n", name, strerror(errno)); error = 1;}
 	}else{ remove(temp_name); } // remove temp (cleanup) if failed to write
 	return error;
 }
