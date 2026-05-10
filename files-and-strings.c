@@ -314,7 +314,7 @@ int main(int argc, char *argv[]){
 			entries = tmp;
 		}else{ free(entries); entries = NULL; }
 	}else{ goto free_entries; } // failed to read file
-		
+	
 	free_entries: // cleanup and print
 	if(entries){ for(size_t i = 0; i < count; i++){ printf("[%d] %s\n", i + 1, entries[i]); free(entries[i]); } free(entries); }
 	
