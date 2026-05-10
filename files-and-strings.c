@@ -311,7 +311,7 @@ int main(int argc, char *argv[]){
 			char **tmp = realloc(entries, count * sizeof(char*));
 			if(!tmp){ printf("MEMORY ERROR: failed to trim buffer."); goto free_entries; }
 			entries = tmp;
-		}else{ free(entries); entries = NULL; } 
+		}else{ free(entries); entries = NULL; }
 	}else{ goto free_entries; } // failed to read file
 	
 	free_entries: // cleanup
