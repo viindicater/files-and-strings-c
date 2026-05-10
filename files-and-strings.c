@@ -49,7 +49,7 @@
 }*/
 
 ////
-// string
+// strings
 ////
 
 char *readline(FILE *fp){ // should not be used for binary data / where null bytes are allowed due to strlen
@@ -223,7 +223,7 @@ void fix_line_after_fields_parse(char *line, int n){ // fixes the problem above 
 }
 
 int main(int argc, char *argv[]){
-	/*if(1){ // Test (reads input, tokenize_line( ) , then say if each token is a valid file or directory (and list all files if directory)
+	/*if(1){ // Test (reads input, tokenize_line( ) , then print if each token is a valid file or directory (and list all files if directory)
 		printf("(Test) Enter paths: ");
 		char *line = readline(stdin);
 		if(!line){ puts("MEMORY ERROR."); return 1; }
@@ -262,14 +262,16 @@ int main(int argc, char *argv[]){
 	// file write example
 	char *saveData[] = { //normally would save the char **entries you read, but this is example data
 		"A\tB\tC",
-		"E\tF",
-		"G\tH\tI\t",
+		"A\tB",
+		"Q\tW\tE\t",
+		"R\tT\t",
+		"Z\tX\tC",
 	};
 	size_t count3 = sizeof(saveData) / sizeof(saveData[0]); // number of lines
 	
 	
 	// the actual saving is just one function call (returns 0 on success, or 1 or something else on error)
-	// file and memory errors are handled by the save_file itself
+	// file and memory errors are handled by save_file itself
 	if(save_file(fileName, saveData, count3) == 0){
 		
 		puts("Success (save).");
@@ -280,7 +282,6 @@ int main(int argc, char *argv[]){
 	
 	puts(""); puts("read file example: ");
 	// file read example
-	
 	char **entries2 = NULL; size_t count2 = 0;
 	if(read_file(fileName, &entries2, &count2) == 0 && entries2){
 		for(size_t i = 0; i < count2; i++){ printf("%s\n", entries2[i]); } // print file
@@ -292,7 +293,7 @@ int main(int argc, char *argv[]){
 	if(entries2){ for(size_t i = 0; i < count2; i++){ free(entries2[i]); } free(entries2); } // cleanup
 	
 	
-	puts(""); puts("read file with validation example: ");
+	puts(""); puts("read file with validation example (removes malformed lines): ");
 	// (can ignore, is a specific example similar to what I do in my project, where file is saved as lines of tab separated fields)
 	// file read with validation / parse example
 	char **entries = NULL; size_t count = 0;
@@ -313,9 +314,9 @@ int main(int argc, char *argv[]){
 			entries = tmp;
 		}else{ free(entries); entries = NULL; }
 	}else{ goto free_entries; } // failed to read file
-	
-	free_entries: // cleanup
-	if(entries){ for(size_t i = 0; i < count; i++){ free(entries[i]); } free(entries); }
+		
+	free_entries: // cleanup and print
+	if(entries){ for(size_t i = 0; i < count; i++){ printf("[%d] %s\n", i + 1, entries[i]); free(entries[i]); } free(entries); }
 	
 	printf("\nEnter anything to exit: ");
 	char *line = readline(stdin); free(line);
