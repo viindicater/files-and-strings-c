@@ -122,13 +122,13 @@ char **list_files(const char *path, int *count){ // list of files in path (shoul
 	char search[MAX_PATH]; snprintf(search, sizeof(search), "%s\\*", path);
 	WIN32_FIND_DATA fd; HANDLE h = FindFirstFile(search, &fd);
 	if(h == INVALID_HANDLE_VALUE){ free(files); return NULL; }
-	do {
+	do{
 		if(strcmp(fd.cFileName, ".") && strcmp(fd.cFileName, "..")){
 			size_t len = strlen(fd.cFileName); char *f = malloc(len + 1); if(!f){ FindClose(h); goto fail; } memcpy(f, fd.cFileName, len + 1);
 			if(*count >= size){ size *= 2; char **tmp = realloc(files, size * sizeof(char*)); if(!tmp){ free(f); FindClose(h); goto fail; } files = tmp; }
 			files[(*count)++] = f;
 		}
-	} while(FindNextFile(h, &fd));
+	}while(FindNextFile(h, &fd));
 	if(GetLastError() != ERROR_NO_MORE_FILES){ FindClose(h); goto fail; } // check error of FindNextFile
 	FindClose(h);
 #else
@@ -200,7 +200,7 @@ char **parse_fields(char *line, int *count){ // WARNING: replaces \t's with \0's
 	char *cur = line, *tab = NULL; int size = 5; *count = 0;
 	char **fields = malloc(size * sizeof(char*));
 	if(!fields){ puts("MEMORY ERROR: failed to parse fields."); return NULL; }
-	while(1){
+	do{
 		if(*count == size){
 			size *= 2;
 			char **tmp = realloc(fields, size * sizeof(char*));
@@ -209,8 +209,8 @@ char **parse_fields(char *line, int *count){ // WARNING: replaces \t's with \0's
 		}
 		fields[(*count)++] = cur;
 		tab = strchr(cur, '\t');
-		if(tab){ *tab = '\0'; cur = tab + 1; }else{ break; }
-	}
+		if(tab){ *tab = '\0'; cur = tab + 1; }
+	}while(tab);
 	if(*count > 0){
 		char **tmp = realloc(fields, *count * sizeof(char*));
 		if(tmp){ fields = tmp; }//else{ puts("MEMORY ERROR: failed to parse fields (3)."); free(fields); return NULL; } // no need to free each fields[i] since they are part of line, not malloc'd here
@@ -264,6 +264,7 @@ int main(int argc, char *argv[]){
 		"A\tB",
 		"Q\tW\tE\t",
 		"R\tT\t",
+		"A",
 		"Z\tX\tC",
 	};
 	size_t count3 = sizeof(saveData) / sizeof(saveData[0]); // number of lines
