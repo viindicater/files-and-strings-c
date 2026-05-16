@@ -38,18 +38,14 @@ void set_error_message(int i, int j, char *s){ // set error in one place, for co
 	if(!errorMessage){ return; } size_t len = 1024;
 	if(i == 0){ // Memory Error
 		if(j == 0){ snprintf(errorMessage, len, "Memory Error: allocation failed (%s).", s); }
-		if(j == 1){ snprintf(errorMessage, len, "Memory Error: failed to grow buffer (%s).", s); }
-		if(j == 2){ snprintf(errorMessage, len, "Memory Error: failed to trim buffer (%s).", s); } // should never actually happen because realloc to a smaller size is usually safe
+		else if(j == 1){ snprintf(errorMessage, len, "Memory Error: failed to grow buffer (%s).", s); }
+		else if(j == 2){ snprintf(errorMessage, len, "Memory Error: failed to trim buffer (%s).", s); } // should never actually happen because realloc to a smaller size is usually safe
 	}else if(i == 1){ // File Error
-		if(j == 0){ snprintf(errorMessage, len, "File Error: failed to open '%s': %s.", s, strerror(errno)); }
-		if(j == 1){ snprintf(errorMessage, len, "File Error: failed to close '%s': %s.", s, strerror(errno)); }
-		if(j == 2){ snprintf(errorMessage, len, "File Error: failed to read '%s': %s.", s, strerror(errno)); }
-		if(j == 3){ snprintf(errorMessage, len, "File Error: failed to write '%s: %s.'.", s, strerror(errno)); }
-		if(j == 4){ snprintf(errorMessage, len, "File Error: failed to remove '%s': %s.", s, strerror(errno)); }
-		if(j == 5){ snprintf(errorMessage, len, "File Error: failed to rename '%s': %s.", s, strerror(errno)); }
+		const char *actions[] = {"open", "close", "read", "write", "remove", "rename"};
+		snprintf(errorMessage, len, "File Error: failed to %s '%s': %s.", actions[j], s, strerror(errno));
 	}else if(i == 2){ // Parse Error
 		if(j == 0){ snprintf(errorMessage, len, "Parse Error: non numeric input.", s); }
-		if(j == 1){ snprintf(errorMessage, len, "Parse Error: out of range (overflow).", s); }
+		else if(j == 1){ snprintf(errorMessage, len, "Parse Error: out of range (overflow).", s); }
 	}
 }
 
@@ -72,8 +68,7 @@ void set_error_message(int i, int j, char *s){ // set error in one place, for co
 	}
 	buffer[len] = '\0'; // null-terminate
 	char *tmp = realloc(buffer, len + 1); // trim buffer to exact length
-	if(!tmp){ free(buffer); return NULL; } // realloc failed, cleanup (even tho buffer is valid)
-	return tmp;
+	return tmp ? tmp : buffer;
 }*/
 
 ////
@@ -120,10 +115,7 @@ char **tokenize_line(const char *line, int *count){
 	if(*count > 0){ tmp = realloc(t, *count * sizeof(char*)); }
 	else{ tmp = realloc(t, 1 * sizeof(char*)); } // if string empty (user hit enter without typing anything), shrink to 1 (instead of keeping initial size of 8)
 	
-	if(!tmp){ goto fail; }
-	t = tmp;
-	
-	return t;
+	return tmp ? tmp : t;
 	fail: for(int i = 0; i < *count; i++){ free(t[i]); } free(t); return NULL;
 }
 
@@ -135,15 +127,15 @@ char *concatv(const char *first, ...){ // return a combined buffer of all passed
 	*ptr = '\0'; return s;
 }
 
-void str_to_lower(char *str){ for(int i = 0; str[i]; i++){ str[i] = tolower((unsigned char)str[i]); }}
+void str_to_lower(char *str){ for(size_t i = 0; str[i]; i++){ str[i] = tolower((unsigned char)str[i]); }}
 int str_to_int(const char *s, int *out){
-	if(!s || *s == '\0'){ set_error_message(0, 0, "parsing"); return 1; } // if NULL ptr or empty str
+	if(*s == '\0'){ set_error_message(2, 0, ""); return 1; } // if empty str i.e. non numeric
 	char *end; errno = 0; long v = strtol(s, &end, 10);
-	if(*end != '\0'){ set_error_message(2, 0, ""); return 1; } // didn't reach string end, i.e. string has non numeric characters (or empty)
+	if(*end != '\0'){ set_error_message(2, 0, ""); return 1; } // didn't reach string end, i.e. string has non numeric characters
 	if(errno == ERANGE || v > INT_MAX || v < INT_MIN){ set_error_message(2, 1, ""); return 2; } // if v out of int range then overflow, errno == ERANGE if strtol itself overflows long
-	if(out){ *out = (int)v; } return 0;
+	*out = (int)v; return 0;
 }
-int contains_tab(const char *s){ for(int i = 0; s && s[i]; i++){ if(s[i] == '\t'){ return 1; }} return 0; }
+int contains_tab(const char *s){ for(size_t i = 0; s && s[i]; i++){ if(s[i] == '\t'){ return 1; }} return 0; }
 
 ////
 // files
