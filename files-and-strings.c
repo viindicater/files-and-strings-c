@@ -276,7 +276,9 @@ int main(int argc, char *argv[]){
 	// concatv example:
 	char *cve0 = "abcd";
 	char *cve = concatv("1234", cve0, NULL);
-	puts(cve); free(cve);
+	if(cve){
+		puts(cve); free(cve);
+	}else{ puts("concatv error."); }
 	//
 	
 	
